@@ -9,6 +9,65 @@ import java.util.List;
 
 public class CategoriaDao {
 
+    // Validar duplicados por nombre (LOWER para ignorar mayúsculas/minúsculas)
+    public boolean existeNombre(String nombre) throws SQLException {
+        String sql = """
+            SELECT COUNT(*)
+            FROM categoria
+            WHERE LOWER(nombre) = LOWER(?)
+            """;
+
+        Connection conn = ConexionDB.conectar();
+
+        if (conn == null) {
+            throw new SQLException("No se pudo establecer la conexión a la base de datos.");
+        }
+
+        try (conn;
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, nombre.trim());
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    // Validar si existen productos vinculados antes de eliminar
+    // Reemplaza el método en CategoriaDao.java con este:
+    public boolean tieneProductos(int categoriaId) throws SQLException {
+        String sql = """
+        SELECT COUNT(*)
+        FROM producto
+        WHERE id_categoria = ?
+        """;
+
+        Connection conn = ConexionDB.conectar();
+
+        if (conn == null) {
+            throw new SQLException("No se pudo establecer la conexión a la base de datos.");
+        }
+
+        try (conn;
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, categoriaId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        }
+
+        return false;
+    }
+
     public boolean insertar(Categoria c) throws SQLException {
         String sql = "INSERT INTO categoria (nombre, is_active) VALUES (?, ?)";
 
